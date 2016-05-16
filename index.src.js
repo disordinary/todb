@@ -1,6 +1,6 @@
 var fs = require( 'fs' );
 const chunk_size = 512; //size in bytes of a chunk of db
-const max_doc_size = 9; //max doc (key value pair) size of 99.99 MB
+const max_doc_size = 8; //max doc (key value pair) size of 9.99 MB
 const byte_size_pad = Array(max_doc_size).fill().reduce(prev => prev = (prev ||  "") + "0"); //the padding string for they bytes, 8 0s
 
 

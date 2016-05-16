@@ -6,7 +6,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var fs = require('fs');
 var chunk_size = 512; //size in bytes of a chunk of db
-var max_doc_size = 9; //max doc (key value pair) size of 99.99 MB
+var max_doc_size = 8; //max doc (key value pair) size of 9.99 MB
 var byte_size_pad = Array(max_doc_size).fill().reduce(function (prev) {
 	return prev = (prev || "") + "0";
 }); //the padding string for they bytes, 8 0s
