@@ -6,16 +6,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var fs = require('fs');
 var chunk_size = 512; //size in bytes of a chunk of db
-var max_doc_size = 9; //max doc_size of 99.99 MB
+var max_doc_size = 9; //max doc (key value pair) size of 99.99 MB
 var byte_size_pad = Array(max_doc_size).fill().reduce(function (prev) {
 	return prev = (prev || "") + "0";
 }); //the padding string for they bytes, 8 0s
 
-var RVS = function () {
-	function RVS(path_to_db, cb) {
+var Todb = function () {
+	function Todb(path_to_db, cb) {
 		var _this = this;
 
-		_classCallCheck(this, RVS);
+		_classCallCheck(this, Todb);
 
 		this.path = path_to_db;
 		this.queue = [];
@@ -32,7 +32,7 @@ var RVS = function () {
 		});
 	}
 
-	_createClass(RVS, [{
+	_createClass(Todb, [{
 		key: "_loadDatabase",
 		value: function _loadDatabase(cb) {
 			cb();
@@ -44,7 +44,12 @@ var RVS = function () {
 
 			this.locked = true;
 			fs.stat(this.path + '.log', function (err, stats) {
-				_this2._logs_fd_size = stats.size;
+				if (err && err.code == 'ENOENT') {
+					_this2._logs_fd_size = 0;
+				} else {
+					_this2._logs_fd_size = stats.size;
+				}
+
 				fs.open(_this2.path + '.log', 'a+', function (err, fd) {
 					_this2._logs_fd = fd;
 
@@ -95,26 +100,28 @@ var RVS = function () {
 	}, {
 		key: "_processQueues",
 		value: function _processQueues() {
+			var _this4 = this;
 
 			if (this.locked || this.queue.length === 0) return;
 
 			this.locked = true;
 			var item = this.queue[0];
 
-			//two verbs, put and delete
-			if (item.verb === "put") {
-				this._kv[item.key] = item.value;
-			} else {
-				delete this._kv[item.key];
-			}
-			//iff item is succesfully written to disk:
+			//if item is succesfully written to disk:
 			var doc = JSON.stringify(item);
 			var bytes = pad(byte_size_pad, Buffer.byteLength(doc));
 
 			var output = new Buffer(bytes + doc);
 
-			//fs.write( this._logs_fd, bytes  );
 			fs.write(this._logs_fd, output, 0, output.byteLength, function (err) {
+
+				//two verbs, put and delete
+				if (item.verb === "put") {
+					_this4._kv[item.key] = item.value;
+				} else {
+					delete _this4._kv[item.key];
+				}
+
 				item.cb(err);
 			});
 			this.queue.shift();
@@ -161,12 +168,12 @@ var RVS = function () {
 		}
 	}]);
 
-	return RVS;
+	return Todb;
 }();
 
 function pad(pad, str) {
 	return (pad + str).slice(-pad.length);
 }
 
-module.exports = RVS;
+module.exports = Todb;
 

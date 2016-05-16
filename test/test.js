@@ -1,5 +1,5 @@
 var assert = require("assert");
-var DB = require('../index.js');
+var DB = require('../index.src.js');
 
 describe( "todb insertion and retrieval test" , ( ) => {
 	it( "an insert should be the same as a retrieval" , ( done ) => {

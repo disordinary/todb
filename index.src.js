@@ -1,11 +1,11 @@
 var fs = require( 'fs' );
 const chunk_size = 512; //size in bytes of a chunk of db
-const max_doc_size = 9; //max doc_size of 99.99 MB
+const max_doc_size = 9; //max doc (key value pair) size of 99.99 MB
 const byte_size_pad = Array(max_doc_size).fill().reduce(prev => prev = (prev ||  "") + "0"); //the padding string for they bytes, 8 0s
 
 
 
-class RVS {
+class Todb {
 	constructor( path_to_db , cb ) {
 		this.path = path_to_db;
 		this.queue = [ ]; 
@@ -30,7 +30,12 @@ class RVS {
 	_loadLogs( cb ) {
 		this.locked = true;
 		fs.stat(  this.path + '.log' , ( err , stats ) => {
-			this._logs_fd_size = stats.size;
+			if( err && err.code == 'ENOENT' ) {
+				this._logs_fd_size = 0;
+			} else {
+				this._logs_fd_size = stats.size;
+			}
+			
 			fs.open( this.path + '.log' , 'a+' , ( err , fd ) => {
 				this._logs_fd = fd;
 				
@@ -83,22 +88,23 @@ class RVS {
 		this.locked = true;
 		let item = this.queue[ 0 ];
 
-		//two verbs, put and delete
-		if( item.verb === "put" ) {
-			this._kv[ item.key ] = item.value;
-		} else {
-			delete this._kv[ item.key ];
-		}
-		//iff item is succesfully written to disk:
+
+		//if item is succesfully written to disk:
 		var doc = JSON.stringify( item );
 		var bytes = pad( byte_size_pad , Buffer.byteLength( doc ));
 
         var output = new Buffer(bytes + doc);
-       
-
-
-        //fs.write( this._logs_fd, bytes  );
+      
         fs.write(this._logs_fd, output , 0 , output.byteLength , ( err ) => {
+        	
+			//two verbs, put and delete
+			if( item.verb === "put" ) {
+				this._kv[ item.key ] = item.value;
+			} else {
+				delete this._kv[ item.key ];
+			}
+
+
         	item.cb( err );
         });
 		this.queue.shift( );
@@ -150,4 +156,4 @@ function pad(pad, str) {
 }
 
 
-module.exports = RVS;
+module.exports = Todb;
