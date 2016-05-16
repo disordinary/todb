@@ -1,22 +1,24 @@
-#todb
+![todb](https://raw.githubusercontent.com/disordinary/todb/master/docs/logo.png)
 
-The goal of this project is to create an in process JSON aware document oriented database for node.
+todb is an in process document orientated database written in node. 
 
-Currently todb is a persistent in memory key, value store. This will change when compacting is introduced in the next version, at that point it will still require key's to be in memory. 
+Recent modifications to data will are stored in append only logs and kept in memory (and on disk), periodically they will be merged with existing data into SSTables. These SSTables are immutable so will be discarded once a marge is complete.  Keys will be kept in a seperate SSTable. This is similar to how LevelDB works.
 
-# Goals: 
-* Read optimised design. ✓
-* Keys can be greater than memory.
-* Support levelDB style querying by range natively.
-* Indexes (provided by a reverse lookup table).
-* Querying of unindexed data (will be slow).
-* Query API, I'm thinking chainable function calls rather than JSON or SQL Like.
-* Fast. ✓
-* ACID. ✓
-* Streams.
-* Batch Support.
-* Multi threaded.
-* Fault tolerant.
+Documents will be stored in JSON and will be queriable, indexes will be stored in seperate SSTables as reverse lookup tables. Additionally because of the SSTable data structure todb will be able to stream range values. 
+
+
+Currently todb is an in memory key value store with an append only log style format.
+
+##Todo (hopefully in this order):
+1. Append only log support ✓
+2. Data compaction
+3. Data indexing
+4. Data querying
+5. Moving out of the event loop (child spawn?) 
+6. Batch processing
+7. Streaming
+8. Abstract LevelDown support
+
 
 
 ##So what works now?
@@ -24,6 +26,7 @@ Currently todb is a persistent in memory key, value store. This will change when
 Well right now (as stated above) It's simply a persistent in memory KV store. It hasn't been battle tested and is still under heavy development.
 
 ##api
+> This will change.
 
 ###put( key , value , callback )
 `put` is an async method to put the value into the datastore, it won't be there immediately as it waits until it succesfully writes to append log.
