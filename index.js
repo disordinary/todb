@@ -43,14 +43,17 @@ var Todb = function () {
 			var _this2 = this;
 
 			this.locked = true;
-			fs.stat(this.path + '.log', function (err, stats) {
+			if (!fs.existsSync(this.path)) {
+				fs.mkdirSync(this.path);
+			}
+			fs.stat(this.path + '/log', function (err, stats) {
 				if (err && err.code == 'ENOENT') {
 					_this2._logs_fd_size = 0;
 				} else {
 					_this2._logs_fd_size = stats.size;
 				}
 
-				fs.open(_this2.path + '.log', 'a+', function (err, fd) {
+				fs.open(_this2.path + '/log', 'a+', function (err, fd) {
 					_this2._logs_fd = fd;
 
 					//load log into memory
@@ -81,6 +84,7 @@ var Todb = function () {
 							_this3._kv[record.key] = record.value;
 							break;
 						default:
+							delete _this3._kv[record.key];
 							break;
 					}
 					_this3._logReadRecord(fd, offset, cb);
@@ -122,6 +126,8 @@ var Todb = function () {
 					delete _this4._kv[item.key];
 				}
 
+				_this4._logs_fd_size += output.byteLength;
+
 				item.cb(err);
 			});
 			this.queue.shift();
@@ -131,7 +137,7 @@ var Todb = function () {
 		key: "put",
 		value: function put(key, value, cb) {
 			this.queue.push({ key: key, value: value, verb: 'put', cb: cb });
-			this._processQueues();
+			process.nextTick(this._processQueues.bind(this));
 		}
 	}, {
 		key: "get",
@@ -146,6 +152,7 @@ var Todb = function () {
 		key: "del",
 		value: function del(key, cb) {
 			this.queue.push({ key: key, verb: 'del', cb: cb });
+			process.nextTick(this._processQueues.bind(this));
 		}
 	}, {
 		key: "close",

@@ -29,14 +29,17 @@ class Todb {
 
 	_loadLogs( cb ) {
 		this.locked = true;
-		fs.stat(  this.path + '.log' , ( err , stats ) => {
+		if (!fs.existsSync(this.path)){
+		    fs.mkdirSync(this.path);
+		}
+		fs.stat(  this.path + '/log' , ( err , stats ) => {
 			if( err && err.code == 'ENOENT' ) {
 				this._logs_fd_size = 0;
 			} else {
 				this._logs_fd_size = stats.size;
 			}
 			
-			fs.open( this.path + '.log' , 'a+' , ( err , fd ) => {
+			fs.open( this.path + '/log' , 'a+' , ( err , fd ) => {
 				this._logs_fd = fd;
 				
 				//load log into memory
