@@ -12,7 +12,15 @@ describe( "todb insertion and retrieval test" , ( ) => {
 					done();
 				} );
 			});
-			db.close();
+
+			db.put( "FOO" , "BAH" , ( err ) => {
+				
+				 db.del( "FOO" , ( err , value ) => {
+					//assert.equal( "CAT" , value );
+					//done();
+				} );
+			});
+			//db.close();
 		});
 	})
 		

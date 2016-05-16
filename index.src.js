@@ -66,6 +66,7 @@ class Todb {
 									this._kv[ record.key ] = record.value;
 								break;
 								default:
+									delete this._kv[ record.key ];
 								break;
 							}
 							this._logReadRecord( fd , offset , cb );
@@ -104,6 +105,7 @@ class Todb {
 				delete this._kv[ item.key ];
 			}
 
+			this._logs_fd_size += output.byteLength;
 
         	item.cb( err );
         });
@@ -128,7 +130,7 @@ class Todb {
 
 	put( key , value , cb ) {
 		this.queue.push( { key , value , verb : 'put' , cb } );
-		this._processQueues();
+		process.nextTick( this._processQueues.bind( this ) );
 	}
 
 	get( key , cb ) {
@@ -141,6 +143,7 @@ class Todb {
 
 	del( key , cb ) {
 		this.queue.push( { key  , verb : 'del' , cb } );
+		process.nextTick( this._processQueues.bind( this ) );
 	}
 
 	close( ) {
