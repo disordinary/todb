@@ -8,11 +8,11 @@ todb is an in process document orientated database written in node.
 3. Indexible and searchable.
 4. ACID compliant.
 
-Recent modifications to data will are stored in append only logs and kept in memory (and on disk), periodically they will be merged with existing data into SSTables. These SSTables are immutable so will be discarded once a marge is complete.  Keys will be kept in a seperate SSTable. This is similar to how LevelDB works.
+Recent modifications to data are stored in append only logs and kept in memory (and on disk), periodically they will be merged with existing data into SSTables. These SSTables are immutable so will be discarded once a merge is complete.  Keys will be kept in a seperate SSTable. This is similar to how LevelDB works.
 
 Documents will be stored in JSON and will be queriable, indexes will be stored in seperate SSTables as reverse lookup tables. Additionally because of the SSTable data structure todb will be able to stream range values. 
 
-Currently todb is an in memory key value store with an append only log style format.
+As of right now todb is an in memory key value store with an append only log style format.
 
 ##Todo (hopefully in this order):
 1. Append only log support ✓
