@@ -61,8 +61,7 @@ class Todb {
 				( err , offset , buffer ) => { 
 					this._read( fd , offset , +buffer.toString( ) , 
 						( err , offset , buf ) => {
-							//cb( err , buf , offset );
-							//console.log( buf.toString());
+					
 							let record = JSON.parse( buf );
 							switch( record.verb ) {
 								case "put":
