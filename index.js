@@ -1,15 +1,11 @@
-"use strict";
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var fs = require('fs');
-var chunk_size = 512; //size in bytes of a chunk of db
-var max_doc_size = 8; //max doc (key value pair) size of 9.99 MB
-var byte_size_pad = Array(max_doc_size).fill().reduce(function (prev) {
-	return prev = (prev || "") + "0";
-}); //the padding string for they bytes, 8 0s
+var Logs = require('append-log');
 
 var Todb = function () {
 	function Todb(path_to_db, cb) {
@@ -18,160 +14,84 @@ var Todb = function () {
 		_classCallCheck(this, Todb);
 
 		this.path = path_to_db;
-		this.queue = [];
+		if (!fs.existsSync(this.path)) {
+			fs.mkdirSync(this.path);
+		}
 		this._kv = {};
-		this._db_fd;
-		this._logs_fd;
-		this._logs_fd_size;
-		this.locked = true;
-
-		this._loadDatabase(function (err) {
-			_this._loadLogs(function (err) {
-				cb(err, _this);
-			});
+		this._peiceTable;
+		new Logs(path_to_db + '/change.log', function (err, _logs) {
+			_this._logs = _logs;
+			_this.readFromLogs(cb);
 		});
 	}
 
 	_createClass(Todb, [{
-		key: "_loadDatabase",
-		value: function _loadDatabase(cb) {
-			cb();
-		}
-	}, {
-		key: "_loadLogs",
-		value: function _loadLogs(cb) {
+		key: 'readFromLogs',
+		value: function readFromLogs(cb) {
 			var _this2 = this;
 
-			this.locked = true;
-			if (!fs.existsSync(this.path)) {
-				fs.mkdirSync(this.path);
-			}
-			fs.stat(this.path + '/log', function (err, stats) {
-				if (err && err.code == 'ENOENT') {
-					_this2._logs_fd_size = 0;
-				} else {
-					_this2._logs_fd_size = stats.size;
+			var read = this._logs.readStream();
+			read.on('data', function (log) {
+				if (log) {
+					var log = JSON.parse(log);
+
+					if (log.verb == 'del') {
+						delete _this2._kv[log.key];
+					} else {
+						_this2._kv[log.key] = { value: log.value };
+					}
 				}
-
-				fs.open(_this2.path + '/log', 'a+', function (err, fd) {
-					_this2._logs_fd = fd;
-
-					//load log into memory
-					_this2._logReadRecord(_this2._logs_fd, 0, function (err, record, offset) {
-						//console.log( record.toString() );
-						cb();
-					});
-				});
-
-				_this2.locked = false;
+			});
+			read.on('error', function (error) {
+				cb(error);
+			});
+			read.on('end', function () {
+				cb(null, _this2);
 			});
 		}
 	}, {
-		key: "_logReadRecord",
-		value: function _logReadRecord(fd, start, cb) {
+		key: 'put',
+		value: function put(key, value, cb) {
 			var _this3 = this;
 
-			if (start === this._logs_fd_size) {
-				return cb();
-			}
-			this._read(fd, start, max_doc_size - 1, function (err, offset, buffer) {
-				_this3._read(fd, offset, +buffer.toString(), function (err, offset, buf) {
-					//cb( err , buf , offset );
-					//console.log( buf.toString());
-					var record = JSON.parse(buf);
-					switch (record.verb) {
-						case "put":
-							_this3._kv[record.key] = record.value;
-							break;
-						default:
-							delete _this3._kv[record.key];
-							break;
-					}
-					_this3._logReadRecord(fd, offset, cb);
-				});
-			});
-		}
-	}, {
-		key: "_read",
-		value: function _read(fd, start, length, cb) {
-
-			var buf = new Buffer(length);
-
-			fs.read(fd, buf, 0, length, start, function (err, bytesRead, buffer) {
-				cb(err, start + length, buffer);
-			});
-		}
-	}, {
-		key: "_processQueues",
-		value: function _processQueues() {
-			var _this4 = this;
-
-			if (this.locked || this.queue.length === 0) return;
-
-			this.locked = true;
-			var item = this.queue[0];
-
-			//if item is succesfully written to disk:
-			var doc = JSON.stringify(item);
-			var bytes = pad(byte_size_pad, Buffer.byteLength(doc));
-
-			var output = new Buffer(bytes + doc);
-
-			fs.write(this._logs_fd, output, 0, output.byteLength, function (err) {
-
-				//two verbs, put and delete
-				if (item.verb === "put") {
-					_this4._kv[item.key] = item.value;
-				} else {
-					delete _this4._kv[item.key];
+			var putObject = { key: key, value: value, verb: 'put', cb: cb };
+			this._logs.write(JSON.stringify(putObject), function (err) {
+				if (!err) {
+					_this3._kv[key] = putObject;
+					return cb();
 				}
-
-				_this4._logs_fd_size += output.byteLength;
-
-				item.cb(err);
+				cb(err);
 			});
-			this.queue.shift();
-			this.locked = false;
+			//	
 		}
 	}, {
-		key: "put",
-		value: function put(key, value, cb) {
-			this.queue.push({ key: key, value: value, verb: 'put', cb: cb });
-			process.nextTick(this._processQueues.bind(this));
-		}
-	}, {
-		key: "get",
+		key: 'get',
 		value: function get(key, cb) {
-			var val = this._kv[key];
+			var val = this._kv[key].value;
 			if (val) {
 				return cb(null, val);
 			}
-			//query made db
+			cb(null, undefined);
 		}
 	}, {
-		key: "del",
+		key: 'del',
 		value: function del(key, cb) {
-			this.queue.push({ key: key, verb: 'del', cb: cb });
-			process.nextTick(this._processQueues.bind(this));
+			var _this4 = this;
+
+			var putObject = { key: key, verb: 'del', cb: cb };
+			this._logs.write(JSON.stringify(putObject), function (err) {
+				if (!err) {
+					_this4._kv[key] = putObject;
+				}
+				putObject.cb(err);
+			});
 		}
 	}, {
-		key: "close",
+		key: 'close',
 		value: function close() {
 			//closes the db
-			fs.close(this._logs_fd);
+			//fs.close( this._logs_fd );
 			//fs.close( this._db_fd );
-		}
-	}, {
-		key: "locked",
-		get: function get() {
-			return this._locked;
-		},
-		set: function set(value) {
-			if (value === false) {
-				//when we unlock we immediately process the queue
-				process.nextTick(this._processQueues.bind(this));
-			}
-			this._locked = value;
 		}
 	}]);
 

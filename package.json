@@ -21,6 +21,7 @@
     "mocha": "^2.4.5"
   },
   "dependencies": {
-    "sstable": "0.0.1"
+    "append-log": "*",
+    "sstable": "*"
   }
 }
