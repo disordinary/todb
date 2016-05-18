@@ -1,6 +1,6 @@
 {
   "name": "todb",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "another db, under development.",
   "main": "index.js",
   "scripts": {
