@@ -1,6 +1,6 @@
 {
   "name": "todb",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "another db, under development.",
   "main": "index.js",
   "scripts": {
@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "append-log": "*",
+    "async": "^2.0.0-rc.5",
     "sstable": "*"
   }
 }

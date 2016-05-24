@@ -9,8 +9,42 @@ function runByOne(generatorFunction) {
     generatorItr.next()
 }
 
+let testData = [
+	{ email : 'zryan@place.com' , age : '34' , name : 'Ryan' , sex : 'm' },
+	{ email : 'zchantelle@place.com' , age : '26' , name : 'Chantelle' , sex : 'f' },
+	{ email : 'znikki@place.com' , age : '37' , name : 'Nikki' , sex : 'f' },
+	{ email : 'zjim@place.com' , age : '22' , name : 'Jim'  , sex : 'm' },
+	{ email : 'zsarah@place.com' , age : '19' , name : 'Sarah' , sex : 'f' },
+	{ email : 'zanne@place.com' , age : '32' , name : 'Anne' , sex : 'f' },
+	{ email : 'zfrank@place.com' , age : '56' , name : 'Frank' , sex : 'm' },
+	{ email : 'zthomas@place.com' , age : '24' , name : 'Thomas' , sex : 'm' },
+	{ email : 'zclaire@place.com' , age : '60' , name : 'Claire' , sex : 'f' },
+	{ email : 'zsam@place.com' , age : '24' , name : 'Sam' , sex : 'm' }
+]
 
 
+
+var db = new DB( '_' , ( err , db ) => {
+	db.createTable("people" , { id : 'email' } ,( err , table) => {
+		console.log("X");
+		runByOne(function* myDelayedMessages(next) {
+				table.createIndex( "name" , ( ) => { } );
+				table.createIndex( "sex" , ( ) => { } );
+				for( test of testData ) {
+					yield table.put( test , next );
+				}
+
+				table.compact( ( ) => {
+                    "use strict";
+                    table.where("sex" , 'f' , ( ) => {
+
+                    } );
+                } );
+			} );
+	} );
+});
+
+/*
 	let tests =  {
 				foo : 'bah',
 				'ra' : 'cat', 

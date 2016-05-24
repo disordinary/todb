@@ -1,4 +1,39 @@
+
 var fs = require( 'fs' );
+var Table = require('./src/table.js');
+class Todb {
+	constructor( path_to_db , cb ) {
+
+		this.path = path_to_db;
+		if (!fs.existsSync(this.path)){
+		    fs.mkdirSync(this.path);
+		}
+		this.tables = { };
+		cb( null , this );
+	}
+
+	createTable( tableName , options , cb ) {
+	
+		let table = new Table( this.path + "/" + tableName , options , ( err , table ) => {
+			this.tables[ tableName ] = table;
+			cb( null , table );		
+		} );
+	}
+	
+
+}
+
+function pad(pad, str) {
+    return (pad + str).slice(-pad.length);
+}
+
+
+module.exports = Todb;
+
+
+
+
+/*var fs = require( 'fs' );
 var Logs = require('append-log');
 class Todb {
 	constructor( path_to_db , cb ) {
@@ -82,4 +117,4 @@ function pad(pad, str) {
 }
 
 
-module.exports = Todb;
+module.exports = Todb;*/
