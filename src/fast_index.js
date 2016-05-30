@@ -23,7 +23,7 @@ class FastIndex {
 		this._fd = null; 						//the file discriptor for this table
 		this._path = path;				//the path and filename for this table
 		this._size = 0;					//the size of this table
-		
+
 		this._contentsStart = 0; 		//the offset for the end of the main data / the start of the table of contents
 		this._contents = { }; 			//the first offset of the first character of a key, called the table of contents
 
@@ -39,7 +39,7 @@ class FastIndex {
 				this._fd = fs.openSync( this._path , 'w+' );
 
 			} catch( e ) {
-                console.log( e );
+
 				return cb( e );
 			}
 			this._writeHeaderPlaceHolderSync( );   
@@ -51,7 +51,7 @@ class FastIndex {
 			this._size = fs.statSync( this._path ).size;
 			try {
 				this._fd = fs.openSync( this._path , 'r' );
-                console.log("LOAD");
+
 			} catch( e ) {
 				return cb( e );
 			} 
@@ -74,23 +74,23 @@ class FastIndex {
 
 		//sorts based on key, right now the key HAS TO EXIST.
 		array_of_strings.sort( ( a , b ) => {
-			var a_key = a[ this.key ];
-			var b_key = b[ this.key ];
-			if( a_key < b_key ) {
+
+
+			if( a.key < b.key ) {
 				return -1;
 			}
-			if( a_key > b_key ) {
+			if( a.key > b.key ) {
 				return 1;
 			}
-			return 0; //must be equal, this shouldn't be though...
+			return 0;
 		}  );
-	
+
 
 		var write_size = 0; //the size of the combined dataset, this is used to place the table of contents.
 
 		
 		this._write_from_sorted_array( array_of_strings , ( err ) => {
-			//	console.log( array_of_strings );
+
 			//finish writing by placing table of contents at the bottom of the document
 			let buffer = new Buffer( JSON.stringify( this._contents ) );
 			 fs.write(this._fd, buffer , 0 , buffer.byteLength , this._size , ( err ) => {
@@ -124,14 +124,14 @@ class FastIndex {
 			let key = "";
 			key = data.key;
 
-		//	console.log( data );
+
 			
 			//create information for content file
 			if( !this._contents.hasOwnProperty( key[ 0 ] ) ) {
 				this._contents[ key[ 0 ] ] = this._size;
 			}
 			
-		   // console.log( this._contents );
+
 
 			var buffer = this._create_record(  data );//new Buffer( bytes + kv_pair );	
 
@@ -201,52 +201,62 @@ class FastIndex {
 	 * @param  {Function} cb the offset of the end of this record and a buffer of this record
 	 */
 	_readItem( start , cb ) {
-        console.log( "START: " + start );
+
 		this._read( start , max_doc_size -1 ,
 				( err , offset , buffer ) => {
 
 					this._read( offset , parseInt( buffer ) ,
-						( err , offset , key ) => {
-                            this._read( offset , max_table_size ,
-                                ( err , offset , key ) => {
-                                    console.log("***********", err, buffer.toString());
-                                    //cb( err , offset , buffer ); //we +1 to take into account the record seperator character
-                                });
-						} );
+                        ( err , offset , key ) => {
+                            this._read( offset , max_doc_size - 1 , ( err , offset , value) => {
+                                cb( err , offset , { key : key.toString() , value : parseInt( value ) } );
+                            })
+                        } );
 				} );
 	}
 
 
 	_read( start , length , cb ) {
 		var buf = new Buffer( length );
-        console.log( this._fd);
+
 		fs.read( this._fd , buf , 0 , length , start , ( err , bytesRead , buffer ) => {
-            console.log( err ) ;
+
                 cb(err, start + length, buffer);
 
 		});
 		
 	}
 
-	seekAll(  equals , cb ) {
+	seekAll(  key , cb ) {
 
+        this._seekAll( this._contents[ key[ 0 ] ] , key , [ ] , cb);
 
-        this._seek( this._contents[ equals[ 0 ] ] , equals , ( er , doc ) => {
-            console.log( doc );
-        } );
 
 	}
 
 
-	
+	_seekAll( offset , key , results , cb ) {
+        this._readItem( offset , ( err , offset , data ) => {
+
+            let doc =  data;
+            console.log( doc.key , key , doc);
+            if( doc.key === key ) {
+               results.push( doc.value );
+            } else if( doc.key > key || offset >= this._contentsStart ) {
+               return  cb( null , results );
+            }
+
+            this._seekAll(offset, key, results, cb);
+
+        } );
+    }
 
 	_seek( offset , key , cb ) {
 
 		this._readItem( offset , ( err , offset , data ) => {
-            console.log( "HERE" );
-			let doc = JSON.parse( data );
-            console.log( "DOC" , doc );
-			if( doc[ this._key ] === key ) {
+
+			let doc =  data.toString();
+
+			if( doc === key ) {
 				return cb( null , doc );
 			}
 			this._seek( offset , key , cb  );

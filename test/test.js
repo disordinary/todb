@@ -26,7 +26,8 @@ let testData = [
 
 var db = new DB( '_' , ( err , db ) => {
 	db.createTable("people" , { id : 'email' } ,( err , table) => {
-		console.log("X");
+        //table.compact();
+        //return;
 		runByOne(function* myDelayedMessages(next) {
 				table.createIndex( "name" , ( ) => { } );
 				table.createIndex( "sex" , ( ) => { } );
@@ -34,12 +35,12 @@ var db = new DB( '_' , ( err , db ) => {
 					yield table.put( test , next );
 				}
 
-				table.compact( ( ) => {
+				//table.compact( ( ) => {
                     "use strict";
-                    table.where("sex" , 'f' , ( ) => {
-
+                    table.where("sex" , 'f' , ( err , data ) => {
+                        console.log("Xsds" , data);
                     } );
-                } );
+               ///} );
 			} );
 	} );
 });

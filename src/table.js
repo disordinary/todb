@@ -108,15 +108,28 @@ class Table {
                 new_indexes[ item ] = fast_index;
                 callback();
             });
-            //console.log(new_indexes,"y")
+
         }.bind( this ) , function done( ) {
             cb( null , new_indexes )
         });
     }
 
 	where( key_name , equals , cb ) {
+        let results = [ ];
 		if( this._indexes.hasOwnProperty( key_name ) ) {
-			this._indexes[ key_name ].seekAll(  equals , cb );
+			this._indexes[ key_name ].seekAll(  equals , ( err , data ) => {
+
+
+                async.eachSeries( data , ( item , cb ) => {
+                    this._sstable.offset( item , ( err , offset , value ) => {
+                        results.push( JSON.parse( value ) );
+                        cb();
+                    } );
+                } , ( ) => {
+                    cb( null , results);
+                });
+
+            } );
 		} else {
             //do a scan
         }
