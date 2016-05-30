@@ -238,7 +238,7 @@ class FastIndex {
         this._readItem( offset , ( err , offset , data ) => {
 
             let doc =  data;
-            console.log( doc.key , key , doc);
+           
             if( doc.key === key ) {
                results.push( doc.value );
             } else if( doc.key > key || offset >= this._contentsStart ) {

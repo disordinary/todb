@@ -38,9 +38,9 @@ var db = new DB( '_' , ( err , db ) => {
 				//table.compact( ( ) => {
                     "use strict";
                     table.where("sex" , 'f' , ( err , data ) => {
-                        console.log("Xsds" , data);
+                        console.log("data" , data);
                     } );
-               ///} );
+               //} );
 			} );
 	} );
 });

@@ -1,8 +1,8 @@
 var async = require("async");
 
 
-var Log = require('/Users/ryanmccarvill/Projects/append-log/index.src.js');
-var SSTable = require('/Users/ryanmccarvill/Projects/SSTable/index.js');
+var Log = require('append-log');
+var SSTable = require('SSTable');
 var FastIndex = require('./fast_index.js');
 var fs = require('fs');
 
@@ -17,7 +17,7 @@ class Table {
 
 		this._sstable = new SSTable( name + '.sst' , this._options , ( err , table ) => {
 			this._log = new Log( name + '.log'  , ( err , log ) => {
-				console.log( "LOG" );
+
 				cb( null , this );
 			});
 		});
@@ -84,7 +84,7 @@ class Table {
                     newIndexes[ index ].writeFromArray( listOfIndexes  , ( ) => { });
                 }
 
-                this.replaceIndexWithTemp(newIndexes , ()=>{});
+                this.replaceIndexWithTemp(newIndexes , cb);
             });
 
         } );
@@ -97,7 +97,7 @@ class Table {
 
         } , ( ) => {
             this._indexes = newIndexes;
-            cb( null  );
+            //cb( null  );
         });
     }
 
