@@ -6,6 +6,9 @@ const version = 1;
 const max_table_size = 10; //max table size is aprox 1 GB
 const table_size_pad = Array(max_table_size).fill().reduce(prev => prev = (prev ||  "") + "0"); //the padding string for they bytes, 8 0s
 
+var start_content_seperator = String.fromCharCode(2); //start of text ascii
+var start_heading_seperator = String.fromCharCode(1); //start of heading ascii
+var record_seperator = String.fromCharCode(30); //record seperator ascii
 
 var fs = require('fs');
 
@@ -147,9 +150,9 @@ class FastIndex {
 
 	_create_record( data ) {
 		//a record is length_of_key_in_bytes|key|offset_in_document_in_bytes
-		var bytes = pad( doc_size_pad , Buffer.byteLength( data.key ));
+		//var bytes = pad( doc_size_pad , Buffer.byteLength( data.key ));
 		var offset = pad( doc_size_pad , data.offset );
-		return new Buffer( bytes + data.key + offset );
+		return new Buffer(  data.key + start_content_seperator + offset + record_seperator );
 	}
 
 
@@ -194,83 +197,43 @@ class FastIndex {
 		
 	}
 
-	/**
-	 * Reads a record from a startign offset
-	 * @private
-	 * @async
-	 * @param  {int} start the offset of the record in the file
-	 * @param  {Function} cb the offset of the end of this record and a buffer of this record
-	 */
-	_readItem( start , cb ) {
-
-		this._read( start , max_doc_size -1 ,
-				( err , offset , buffer ) => {
-
-					this._read( offset , parseInt( buffer ) ,
-                        ( err , offset , key ) => {
-                            this._read( offset , max_doc_size - 1 , ( err , offset , value) => {
-                                if( err ) return cb( err );
-                                cb( err , offset , { key : key.toString() , value : parseInt( value ) } );
-                            })
-                        } );
-				} );
-	}
-
-
-	_read( start , length , cb ) {
-        if( !( start && length && this._contents ) ) return cb( new Error("no record") , null );
-
-		var buf = new Buffer( length );
-
-		fs.read( this._fd , buf , 0 , length , start , ( err , bytesRead , buffer ) => {
-
-                cb(err, start + length, buffer);
-
-		});
-		
-	}
 
 	seekAll(  key , cb ) {
 
-        this._seekAll( this._contents[ key[ 0 ] ] , key , [ ] , cb);
+        let start = this._contents[ key[ 0 ] ];
+        let end;
+        for( let k in this._contents ) {
+            if( k > key ) {
+                end = this._contents[ k ];
+                break;
+            }
+        }
+        if( !end ) {
+            end = this._contentsStart;
+        }
+        let length = end - start;
+        var buf = new Buffer( length );
+
+        fs.read( this._fd , buf , 0 , length , start , ( err , bytesRead , buffer ) => {
+            let records = buffer.toString().split(record_seperator);
+            let returnAr =  [ ];
+            for(let record of records ) {
+                let rec = record.split( start_content_seperator );
+                if( rec[0] == key ) {
+                    returnAr.push(parseInt(rec[1]));
+                }
+              //
+            }
+            cb( null , returnAr );
+            //cb(err, start + length, buffer);
+
+        });
+        //this._seekAll( this._contents[ key[ 0 ] ] , key , [ ] , cb);
 
 
 	}
 
-
-	_seekAll( offset , key , results , cb ) {
-
-        this._readItem( offset , ( err , offset , data ) => {
-            if( err ) return cb( err );
-            let doc =  data;
-
-            if( doc.key === key ) {
-               results.push( doc.value );
-            }
-            if( doc.key > key || offset >= this._contentsStart ) {
-
-               return  cb( null , results );
-            }
-
-            this._seekAll(offset, key, results, cb);
-
-        } );
-    }
-
-	_seek( offset , key , cb ) {
-
-		this._readItem( offset , ( err , offset , data ) => {
-
-			let doc =  data.toString();
-
-			if( doc === key ) {
-				return cb( null , doc );
-			}
-			this._seek( offset , key , cb  );
-		} );
-	}
-
-	/**
+    /**
 	 * a public API for _readItem
 	 * @async
 	 */

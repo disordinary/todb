@@ -87,7 +87,10 @@ class Table {
                 this.replaceIndexWithTemp(newIndexes , cb);
             });
 
-        } );
+        } , ( ) => {
+            cb();
+            console.log( "WHY IS THIS NOT FIRING?");
+        });
 
 	}
 
@@ -97,7 +100,7 @@ class Table {
 
         } , ( ) => {
             this._indexes = newIndexes;
-            console.log("compaction finished?");
+          
             //cb( null  );
         });
     }
@@ -126,7 +129,9 @@ class Table {
         }
 		if( this._indexes.hasOwnProperty( key_name ) ) {
 			this._indexes[ key_name ].seekAll(  equals , ( err , data ) => {
+                
                 async.eachSeries( data , ( item , cb ) => {
+                    //console.log( item );
                     this._sstable.offset( item , ( err , offset , value ) => {
                         results.push( JSON.parse( value ) );
                         cb();
