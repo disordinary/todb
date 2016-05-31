@@ -42,7 +42,7 @@ class Table {
 
 	compact( cb ) {
 		var old_log = this._log;
-
+        console.log( "copacting db" );
         let _indexCache = [ ];
         async.series( [
             ( callback ) => {
@@ -97,6 +97,7 @@ class Table {
 
         } , ( ) => {
             this._indexes = newIndexes;
+            console.log("compaction finished?");
             //cb( null  );
         });
     }
@@ -116,10 +117,15 @@ class Table {
 
 	where( key_name , equals , cb ) {
         let results = [ ];
+
+        for( let key in this._kv ) {
+          //  console.log( this._kv[ key  ].doc );
+            if( this._kv[ key ].doc[ key_name ] === equals ) {
+                results.push( this._kv[ key ].doc );
+            }
+        }
 		if( this._indexes.hasOwnProperty( key_name ) ) {
 			this._indexes[ key_name ].seekAll(  equals , ( err , data ) => {
-
-
                 async.eachSeries( data , ( item , cb ) => {
                     this._sstable.offset( item , ( err , offset , value ) => {
                         results.push( JSON.parse( value ) );

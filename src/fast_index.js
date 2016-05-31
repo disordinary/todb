@@ -27,6 +27,7 @@ class FastIndex {
 		this._contentsStart = 0; 		//the offset for the end of the main data / the start of the table of contents
 		this._contents = { }; 			//the first offset of the first character of a key, called the table of contents
 
+        this._memoryIndex = [ ]; //an in memory index
 		//Load the table
 		this._load( cb );
 	}
@@ -208,6 +209,7 @@ class FastIndex {
 					this._read( offset , parseInt( buffer ) ,
                         ( err , offset , key ) => {
                             this._read( offset , max_doc_size - 1 , ( err , offset , value) => {
+                                if( err ) return cb( err );
                                 cb( err , offset , { key : key.toString() , value : parseInt( value ) } );
                             })
                         } );
@@ -216,6 +218,8 @@ class FastIndex {
 
 
 	_read( start , length , cb ) {
+        if( !( start && length && this._contents ) ) return cb( new Error("no record") , null );
+
 		var buf = new Buffer( length );
 
 		fs.read( this._fd , buf , 0 , length , start , ( err , bytesRead , buffer ) => {
@@ -235,13 +239,16 @@ class FastIndex {
 
 
 	_seekAll( offset , key , results , cb ) {
-        this._readItem( offset , ( err , offset , data ) => {
 
+        this._readItem( offset , ( err , offset , data ) => {
+            if( err ) return cb( err );
             let doc =  data;
-           
+
             if( doc.key === key ) {
                results.push( doc.value );
-            } else if( doc.key > key || offset >= this._contentsStart ) {
+            }
+            if( doc.key > key || offset >= this._contentsStart ) {
+
                return  cb( null , results );
             }
 
