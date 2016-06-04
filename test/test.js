@@ -1,5 +1,7 @@
 var assert = require("assert");
 var DB = require('../index.src.js');
+var async = require('async');
+
 
 function runByOne(generatorFunction) {
     var generatorItr = generatorFunction(resume);
@@ -20,28 +22,51 @@ let testData = [
 	{ email : 'zthomas@place.com' , age : '24' , name : 'Thomas' , sex : 'm' },
 	{ email : 'zclaire@place.com' , age : '60' , name : 'Claire' , sex : 'f' },
 	{ email : 'zsam@place.com' , age : '24' , name : 'Sam' , sex : 'm' }
-]
+];
+
 
 
 
 var db = new DB( '_' , ( err , db ) => {
+    console.log("N");
 	db.createTable("people" , { id : 'email' } ,( err , table) => {
-        //table.compact();
-        //return;
-		runByOne(function* myDelayedMessages(next) {
-				table.createIndex( "name" , ( ) => { } );
-				table.createIndex( "sex" , ( ) => { } );
+        console.log("S");
+
+        async.eachSeries( testData , ( item , callback) => {
+            console.log( item );
+        } , ( ) => {
+            console.log("X");
+        });
+
+
+		/* runByOne(function* myDelayedMessages(next) {
+
+			//	table.createIndex( "name" , ( ) => { } );
+			//	table.createIndex( "sex" , ( ) => { } );
 				for( test of testData ) {
 					yield table.put( test , next );
 				}
 
-				//table.compact( ( ) => {
-                    "use strict";
-                    table.where("sex" , 'f' , ( err , data ) => {
-                        console.log("data" , data);
+                console.log("X");
+
+                describe( "insertion test" , ( ) => {
+                    it( 'the originally inserted data should return' , ( done ) => {
+                        table.where( "email" , "zryan@place.com" , ( err , data ) => {
+                            console.log( data );
+                            assert.equals( data , "TEST" );
+                            done();
+                            //  table.saveIndexes();
+                        } );
                     } );
+                } );
+
+				//table.compact( ( ) => {
+
+                   // table.where("email" , 'zryan@place.com' , ( err , data ) => {
+                   //     console.log("data=" , data);
+                   // } );
                //} );
-			} );
+			} );*/
 	} );
 });
 

@@ -23,6 +23,8 @@
   "dependencies": {
     "append-log": "*",
     "async": "^2.0.0-rc.5",
+    "guid": "0.0.12",
+    "split": "^1.0.0",
     "sstable": "*"
   }
 }

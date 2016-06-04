@@ -6,13 +6,18 @@ const version = 1;
 const max_table_size = 10; //max table size is aprox 1 GB
 const table_size_pad = Array(max_table_size).fill().reduce(prev => prev = (prev ||  "") + "0"); //the padding string for they bytes, 8 0s
 
-var start_content_seperator = String.fromCharCode(2); //start of text ascii
-var start_heading_seperator = String.fromCharCode(1); //start of heading ascii
-var record_seperator = String.fromCharCode(30); //record seperator ascii
+const content_seperator = String.fromCharCode(2); //start of text ascii
+
+const record_seperator = String.fromCharCode(30); //record seperator ascii
+
 
 var fs = require('fs');
 
 var stream = require('stream');
+
+var async = require("async");
+
+var split = require('split');
 
 /**
  * A fast index is similar to an SSTable except it only stores a string and the byte offset of the object
@@ -30,7 +35,9 @@ class FastIndex {
 		this._contentsStart = 0; 		//the offset for the end of the main data / the start of the table of contents
 		this._contents = { }; 			//the first offset of the first character of a key, called the table of contents
 
-        this._memoryIndex = [ ]; //an in memory index
+        this._memoryIndex = { };        //an in memory index
+        this._memoryDelKeys = { };
+        this._unique = true;            //enfoce unique by overwriting new records with old
 		//Load the table
 		this._load( cb );
 	}
@@ -73,7 +80,16 @@ class FastIndex {
 		}
 	}
 
-
+    addToMemoryIndex( value , key , offset , length ) {
+        if( !this._memoryIndex.hasOwnProperty( value ) ) {
+            this._memoryIndex[ value ] = [ ];
+        }
+        this._memoryIndex[ value ].push( { key , offset , length} );
+        delete this._memoryDelKeys[ key ];
+    }
+    removeFromMemoryIndex( key ) {
+        this._memoryDelKeys[ key ] = true;
+    }
 	writeFromArray( array_of_strings , cb ) {
 
 		//sorts based on key, right now the key HAS TO EXIST.
@@ -148,11 +164,13 @@ class FastIndex {
 
 	}
 
-	_create_record( data ) {
+	_create_record( value , key , offset , length ) {
 		//a record is length_of_key_in_bytes|key|offset_in_document_in_bytes
 		//var bytes = pad( doc_size_pad , Buffer.byteLength( data.key ));
-		var offset = pad( doc_size_pad , data.offset );
-		return new Buffer(  data.key + start_content_seperator + offset + record_seperator );
+        offset = pad( doc_size_pad , offset );
+        length = pad( doc_size_pad , length );
+
+		return new Buffer( value + content_seperator + key + content_seperator + offset + content_seperator + length  + record_seperator );
 	}
 
 
@@ -162,7 +180,7 @@ class FastIndex {
 		
 		fs.read( this._fd , buf , 0 , length , this._contentsStart , ( err , bytesRead , buffer ) => {
 			this._contents = JSON.parse( buffer );
-
+            console.log( "TAble of contents" , this._contents );
 			cb( err  );
 		});
 	}
@@ -187,7 +205,7 @@ class FastIndex {
 	_loadHeaderInfoSync( ) {
 		var versionBuffer = new Buffer( 2 );
 		fs.readSync( this._fd , versionBuffer , 0 , 2 , 0 );
-		console.log( `Loading table, version: ${versionBuffer.toString()}` );
+		console.log( `Loading index, version: ${versionBuffer.toString()}` );
 		this._version = parseInt( versionBuffer );
 
 		var offsetBuffer = new Buffer( max_table_size );
@@ -199,8 +217,23 @@ class FastIndex {
 
 
 	seekAll(  key , cb ) {
+        var results = [ ];
 
-        let start = this._contents[ key[ 0 ] ];
+        //..load from disk first..\\
+        if( this._memoryIndex.hasOwnProperty( key ) ) {
+
+            for (var i = 0; i < this._memoryIndex[key].length; i++) {
+                results.push( this._memoryIndex[ key ][ i ] );
+                //if( this._memoryIndex[key][ i ].verb === 'put' ) {
+                //    results[ key ] = this._memoryIndex[ key ][ i ];
+                //} else if( this._memoryIndex[key][ i ].verb === 'del' ) {
+                //    delete results[ key ];
+                //}
+            }
+        }
+
+        cb( null , results );
+      /*  let start = this._contents[ key[ 0 ] ];
         let end;
         for( let k in this._contents ) {
             if( k > key ) {
@@ -227,7 +260,7 @@ class FastIndex {
             cb( null , returnAr );
             //cb(err, start + length, buffer);
 
-        });
+        });*/
         //this._seekAll( this._contents[ key[ 0 ] ] , key , [ ] , cb);
 
 
@@ -240,7 +273,80 @@ class FastIndex {
 	offset( offset , cb ) {
 		this._readItem( offset , cb );
 	}
-	
+    diskToStream( ) {
+        var s = fs.createReadStream(this._path , { start : max_table_size + 2 } ); //{ fd : this._fd } doesn't work
+        return s.pipe( split( record_seperator ));
+    }
+
+    olddiskToStream( ) {
+        let rs = stream.Readable();
+        let this_offset = max_table_size + 2;
+        let contents = Object.keys( this._contents );
+        contents.sort();
+        console.log( contents );
+
+        for( let i = 0; i < contents.length; i++ ) {
+
+            console.log( this._contents[ contents[ i ] ] );
+        }
+        return;
+        rs._read = function () {
+
+            if( this_offset >= this._contentsStart ) {
+                return rs.push( null );
+            }
+            this.offset( this_offset , ( err , end_offset , data ) => {
+                this_offset = end_offset;
+                rs.push( data );
+            });
+        }.bind( this );
+        return rs;
+    }
+
+    save( callbackMain ) {
+        //merges the in memory index with the current one
+        var items = { };
+        let stream = this.diskToStream( );
+        stream.on('data', ( item ) => {
+            //      this._memoryDelKeys[ key ]
+            if( item ) {
+
+                item = item.split(content_seperator);
+                if( !this._memoryDelKeys.hasOwnProperty( item[ 1 ] ) ) {
+                    items[item[0]] = {key: item[1], offset: item[2], length: item[3]}
+                }
+            }
+        } );
+        stream.on('end' , ( err ) => {
+
+            new FastIndex( this._path + '~' , ( error , fi ) => {
+                let mi = Object.keys( this._memoryIndex ).sort();
+                async.eachSeries( mi , ( memIndex , callback) => {
+                    async.eachSeries( this._memoryIndex[ memIndex ] , ( item , cb ) => {
+                        if( !this._memoryDelKeys.hasOwnProperty( item.key ) ) {
+                            items[memIndex] = item;
+                        }
+
+                        console.log( items );
+
+                    } , callback );
+                } , callbackMain );
+            });
+        });
+
+
+
+    }
+
+    add( key , buffer , cb ) {
+        if( !this._contents.hasOwnProperty( key[ 0 ] ) ) {
+            this._contents[ key[ 0 ] ] = this._size;
+        }
+        fs.write( this._fd , buffer , 0 , buffer.byteLength , this._size , ( err ) => {
+            this._size += buffer.byteLength;
+            cb( err );
+        });
+    }
 
 	close( ) {
 		fs.close( this._fd );
