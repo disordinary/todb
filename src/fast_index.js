@@ -26,12 +26,12 @@ var split = require('split');
  */
 class FastIndex {
 
-	constructor( path , cb ) {
+	constructor( path , pkey , cb ) {
 		
 		this._fd = null; 						//the file discriptor for this table
 		this._path = path;				//the path and filename for this table
 		this._size = 0;					//the size of this table
-
+		this._pkey = pkey; 					//the table primary key
 		this._contentsStart = 0; 		//the offset for the end of the main data / the start of the table of contents
 		this._contents = { }; 			//the first offset of the first character of a key, called the table of contents
 
@@ -84,8 +84,18 @@ class FastIndex {
         if( !this._memoryIndex.hasOwnProperty( value ) ) {
             this._memoryIndex[ value ] = [ ];
         }
+		delete this._memoryDelKeys[ key ];
+		for( let i = 0; i < this._memoryIndex[ value ].length ; i++ ) {
+
+			if( this._memoryIndex[ value ][ i ].key == key ) {
+
+				this._memoryIndex[ value ][ i ] =  { key , offset , length};
+				return;
+			}
+		}
         this._memoryIndex[ value ].push( { key , offset , length} );
-        delete this._memoryDelKeys[ key ];
+
+
     }
     removeFromMemoryIndex( key ) {
         this._memoryDelKeys[ key ] = true;
@@ -180,7 +190,7 @@ class FastIndex {
 		
 		fs.read( this._fd , buf , 0 , length , this._contentsStart , ( err , bytesRead , buffer ) => {
 			this._contents = JSON.parse( buffer );
-            console.log( "TAble of contents" , this._contents );
+
 			cb( err  );
 		});
 	}

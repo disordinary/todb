@@ -16,28 +16,31 @@ let testData = [
 	{ email : 'zchantelle@place.com' , age : '26' , name : 'Chantelle' , sex : 'f' },
 	{ email : 'znikki@place.com' , age : '37' , name : 'Nikki' , sex : 'f' },
 	{ email : 'zjim@place.com' , age : '22' , name : 'Jim'  , sex : 'm' },
-	{ email : 'zsarah@place.com' , age : '19' , name : 'Sarah' , sex : 'f' },
+	{ email : 'zsarah@place.com' , age : '18' , name : 'Sarah' , sex : 'f' },
 	{ email : 'zanne@place.com' , age : '32' , name : 'Anne' , sex : 'f' },
 	{ email : 'zfrank@place.com' , age : '56' , name : 'Frank' , sex : 'm' },
 	{ email : 'zthomas@place.com' , age : '24' , name : 'Thomas' , sex : 'm' },
-	{ email : 'zclaire@place.com' , age : '60' , name : 'Claire' , sex : 'f' },
+	{ email : 'zclaire@place.com' , age : '18' , name : 'Claire' , sex : 'f' },
 	{ email : 'zsam@place.com' , age : '24' , name : 'Sam' , sex : 'm' }
 ];
 
 
 
 
-var db = new DB( '_' , ( err , db ) => {
-    console.log("N");
+new DB( '_' , ( err , db ) => {
+
 	db.createTable("people" , { id : 'email' } ,( err , table) => {
-        console.log("S");
 
-        async.eachSeries( testData , ( item , callback) => {
-            console.log( item );
-        } , ( ) => {
-            console.log("X");
-        });
+		table.createIndex( 'age' , ( ) => {
+			async.eachSeries( testData , ( item , next) => {
+				table.put( item  , ( ) => next() );
 
+			} , ( ) => {
+
+				table.where( 'email' , 'zryan@place.com' , ( _ , val ) => console.log( val ) );
+				table.where( 'age' , '18' , ( _ , val ) => console.log( val ) );
+			} );
+		} );
 
 		/* runByOne(function* myDelayedMessages(next) {
 

@@ -35,7 +35,7 @@ class ATable {
 	_load( cb ) {
 
 		//Load the table
-		if ( !fs.existsSync( this._path ) ) {
+		if ( fs.existsSync( this._path ) ) {
 			this._size = fs.statSync( this._path ).size;
 		}
 		try {
@@ -52,10 +52,10 @@ class ATable {
 
 	write( object , cb ) {
 		let buffer = new Buffer( this._create_record( object ) );
-
-		fs.write(this._fd, buffer , 0 , buffer.byteLength , this._size , ( err ) => {
-			let event = { offset : this._size , length : buffer.byteLength , object };
-			this._size += buffer.byteLength;
+		let oldSize = this._size;
+		this._size += buffer.byteLength;
+		fs.write(this._fd, buffer , 0 , buffer.byteLength , oldSize , ( err ) => {
+			let event = { offset : oldSize , length : buffer.byteLength , object };
 			cb( err , event )
 
 		});
@@ -101,8 +101,8 @@ class ATable {
 	 */
 	offset( offset , length , cb ) {
 		this._read( offset , length , ( err , _ , data ) => {
-
-			cb( err , JSON.parse( data.slice( max_doc_size - 1 , -1  ) ) );
+			
+			cb( err , JSON.parse( data.slice( max_doc_size - 1  ,-1 ) ) );
 		} );
 	}
 

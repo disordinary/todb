@@ -19,10 +19,10 @@ class Table {
         this.createIndex( this._options.id , ( _ ) => { console.log(""); });
 
 		this._store = new ATable( name + '.at' , ( err , table ) => {
-            console.log("S1DFSDFSDFSDF");
+
             //load from the log
 			new Log( name + '.log'  , ( err , log ) => {
-                console.log("Xasdasds");
+
                 this._log = log;
                 let logStream = log.toStream( );
                 logStream.on('data', ( log ) => {
@@ -37,7 +37,7 @@ class Table {
                                 for( let index in this._indexes ) {
                                     if (data.hasOwnProperty(index)) {
                                         if( log.verb === 'put' ) {
-                                            this._indexes[index].addToMemoryIndex(data[index], data[this._options.id], log.offset, log.length);
+                                            this._indexes[index].addToMemoryIndex(data[index], data[this._options.id],  log.offset, log.length);
                                         } else if( log.verb == 'del' ) {
                                             this._indexes[index].removeFromMemoryIndex(data[this._options.id]);
                                         }
@@ -85,88 +85,16 @@ class Table {
                         this._indexes[index].addToMemoryIndex(e.object[index], e.object[this._options.id], e.offset, e.length);
                     }
                 }
-                return cb();
+
+
+                if(cb && typeof cb == "function") {
+                    cb();
+                }
             } );
         } ) ;
     }
 
-	compact( cb ) {
-		var old_log = this._log;
-        console.log( "compacting db" );
-        let _indexCache = [ ];
-        async.series( [
-            ( callback ) => {
-                //replace the current log with a new one so that we cna still keep accepting transactions
-                this._log = new Log( this.name + '~.log', callback);
-            },
-            ( callback ) => {
-                //create a new table to merge to
-                new SSTable( this.name + '~.sst' , this._options , callback);
-            },
 
-            //create new temp indexes to write to
-            ( callback ) => { this.createTempIndexes( callback  ) }
-
-
-            ] , ( err , results ) => {
-                this._log = results[ 0 ];
-                let sstable = results[ 1 ];
-                let newIndexes = results[2];
-
-              // sstable.on("RecordAdded" , ( offset , data ) => {
-               //    _indexCache.push( { offset , data }); //todo move to a streamed model
-                //});
-            sstable.mergeLog( this._sstable , old_log , ( e) => {
-                let oldSSTable = this._sstable;
-                this._sstable = sstable;
-                oldSSTable.close();
-                fs.unlink( this.name + '.sst' , ( ) => fs.rename( this.name + '~.sst' , this.name + '.sst' ) );
-                old_log.close();
-                fs.unlink( this.name + '.log' , ( ) => fs.rename( this.name + '~.log' , this.name + '.log' ) );
-
-                for( let index in newIndexes ) {
-                    let listOfIndexes = [ ];
-                    for( let data of _indexCache) {
-                        if( data.data.hasOwnProperty( index ) ) {
-                            listOfIndexes.push( { key : data.data[ index ] , offset : data.offset } );
-                        }
-                    }
-                    newIndexes[ index ].writeFromArray( listOfIndexes  , ( ) => { });
-                }
-
-                this.replaceIndexWithTemp(newIndexes , cb);
-            });
-
-        } , ( ) => {
-            cb();
-            console.log( "WHY IS THIS NOT FIRING?");
-        });
-
-	}
-
-    replaceIndexWithTemp( newIndexes ,cb ) {
-        async.eachSeries( Object.keys( this._indexes ) , ( item , callback) => {
-            fs.unlink( this.name + '.' + item + '.index' , ( ) => fs.rename( this.name + '.' + item + '~.index' , this.name + '.' + item + '.index' , callback ) );
-
-        } , ( ) => {
-            this._indexes = newIndexes;
-          
-            //cb( null  );
-        });
-    }
-
-    createTempIndexes( cb ) {
-        var new_indexes = { };
-        async.eachSeries( Object.keys( this._indexes ) , function iteratee( item , callback) {
-            new FastIndex( this.name + '.' + item + '~.index' , ( err , fast_index ) => {
-                new_indexes[ item ] = fast_index;
-                callback();
-            });
-
-        }.bind( this ) , function done( ) {
-            cb( null , new_indexes )
-        });
-    }
 
 	where( key_name , equals , cb ) {
         let results = [ ];
@@ -177,7 +105,7 @@ class Table {
 
                 async.eachSeries( data , ( item , cb ) => {
 
-                    this._store.offset( item.offset , item.length , ( err  , value ) => {
+                    this._store.offset( item.offset  , item.length , ( err  , value ) => {
 
                         results.push( value );
                         cb();
@@ -193,7 +121,7 @@ class Table {
 	}
 
 	createIndex( name , cb ) {
-		this._indexes[ name ] = new FastIndex( this.name + '.' + name + '.index' , cb );
+		this._indexes[ name ] = new FastIndex( this.name + '.' + name + '.index' , this._options.id , cb );
 	}
 
     saveIndexes( cb ) {
