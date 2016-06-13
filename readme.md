@@ -74,6 +74,6 @@ class Person {
         this.friends = [ ];
     }
 }
-\\And treat the object like you would any other in JS, the proxy would mean that the underlying dataset would update with every change.
+//And treat the object like you would any other in JS, the proxy would mean that the underlying dataset would update with every change.
 ```
 

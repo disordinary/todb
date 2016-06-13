@@ -10,11 +10,16 @@ const default_options = {
 	id : 'id'
 };
 class Table {
-	constructor( name , options , cb ) {
+	constructor( name , options , configObject , cb ) {
+
 		this._options = Object.assign( { } , default_options , options || { } );
 		this.name = name;
 		this._kv = { }; //logs are kept in memory
         this._indexes = { };
+        this._config = configObject;
+
+        this._config[ this.name ] = true;
+
 
         this.createIndex( this._options.id );
 
@@ -118,7 +123,7 @@ class Table {
 
             if (this._indexes.hasOwnProperty(key_name)) {
                 this._indexes[key_name].seekAll(equals, (err, data) => {
-                    
+
                     async.eachSeries(data, (item, next) => {
 
                         this._store.offset(item.offset, item.length, (err, value) => {
@@ -147,6 +152,7 @@ class Table {
 	}
 
 	createIndex( name , cb ) {
+        this._config[ this.name + ":" + name ] = true;
         let promise = new Promise( ( resolve , reject ) => {
             this._indexes[name] = new FastIndex(this.name + '.' + name + '.index', this._options.id, ( err ) => {
                 if ( cb && typeof cb == 'function' ) {

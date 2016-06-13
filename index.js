@@ -1,10 +1,12 @@
 
 var fs = require( 'fs' );
 var Table = require('./src/table.js');
+var config = require('./src/config.js');
 class Todb {
 	constructor( path_to_db , cb ) {
 
 		this.path = path_to_db;
+		this.config = config( path_to_db );
 		if (!fs.existsSync(this.path)){
 		    fs.mkdirSync(this.path);
 		}
@@ -25,7 +27,7 @@ class Todb {
 	//creates or returns a table
 	table( tableName , options , cb ) {
 		let promise = new Promise( ( resolve , reject ) => {
-			let table = new Table(this.path + "/" + tableName, options, (err, table) => {
+			let table = new Table(this.path + "/" + tableName, options, this.config , (err, table) => {
 				this.tables[ tableName ] = table;
 
 				if ( cb && typeof cb == 'function' ) {
