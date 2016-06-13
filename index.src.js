@@ -9,14 +9,32 @@ class Todb {
 		    fs.mkdirSync(this.path);
 		}
 		this.tables = { };
-		cb( null , this );
+
+		//return a promise if callback doesn't exist
+		if( cb && typeof cb == 'function' ) {
+			cb(null, this);
+		} else {
+			return new Promise( ( resolve , reject ) => {
+				resolve( this );
+			} );
+		}
+
 	}
 
-	createTable( tableName , options , cb ) {
+
+	//creates or returns a table
+	table( tableName , options , cb ) {
 	
 		let table = new Table( this.path + "/" + tableName , options , ( err , table ) => {
 			this.tables[ tableName ] = table;
-			cb( null , table );		
+
+			if( cb && typeof cb == 'function' ) {
+				cb(null, table);
+			} else {
+				return new Promise( ( resolve , reject ) => {
+					resolve( table );
+				} );
+			}
 		} );
 	}
 	
