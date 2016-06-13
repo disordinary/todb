@@ -230,6 +230,7 @@ class FastIndex {
         var results = [ ];
 
         //..load from disk first..\\
+		//..then load from temp memindex if it exists..\\
         if( this._memoryIndex.hasOwnProperty( key ) ) {
 
             for (var i = 0; i < this._memoryIndex[key].length; i++) {
@@ -241,6 +242,8 @@ class FastIndex {
                 //}
             }
         }
+
+
 
         cb( null , results );
       /*  let start = this._contents[ key[ 0 ] ];
@@ -328,19 +331,31 @@ class FastIndex {
             }
         } );
         stream.on('end' , ( err ) => {
+			this._memoryIndexTemp = this._memoryIndex;
+			this._memoryIndex = { };
 
+			this._delIndexTemp = this._memoryDelKeys;
+			this._memoryDelKeys = { };
             new FastIndex( this._path + '~' , ( error , fi ) => {
-                let mi = Object.keys( this._memoryIndex ).sort();
+                let mi = Object.keys( this._memoryIndexTemp).sort();
                 async.eachSeries( mi , ( memIndex , callback) => {
-                    async.eachSeries( this._memoryIndex[ memIndex ] , ( item , cb ) => {
-                        if( !this._memoryDelKeys.hasOwnProperty( item.key ) ) {
+                    async.eachSeries( this._memoryIndexTemp[ memIndex ] , ( item , cb ) => {
+                        if( !this._memoryIndexTemp.hasOwnProperty( item.key ) ) {
                             items[memIndex] = item;
                         }
 
                         console.log( items );
 
                     } , callback );
-                } , callbackMain );
+                } , ( ) => {
+
+					fi.writeFromArray( Array.from( items ) , ( ) => {
+						
+						callbackMain();
+					});
+
+
+				} );
             });
         });
 

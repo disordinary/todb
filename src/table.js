@@ -168,9 +168,28 @@ class Table {
         }
 	}
 
-    saveIndexes( cb ) {
-        this._indexes[ this._options.id ].save();
+   // saveIndexes( cb ) {
+   //     this._indexes[ this._options.id ].save();
+   // }
+
+    save( cb ) {
+        //1. move the existing log to a new log
+        //2. save the indexes
+        //3. delete the existing log
+
+        //move log
+        async.each( this._indexes , ( index , cb ) => {
+           index.save( cb );
+        } , ( err ) => {
+            //delete old log
+        });
+
     }
+    //re-saves the db based on the index which is the source of truth, will get rid of all the old data which has been overwritten - might have to be offline at this stage
+    compact( cb ) {
+
+    }
+
 }
 
 module.exports = Table;
