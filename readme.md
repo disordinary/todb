@@ -28,7 +28,7 @@ new DB( 'testDB' , ( err , db ) => {
          //we've just created secondary indexes for the name field.
         table.createIndex("name" , ( err ) => {
             //create a new record
-            table.put( { id : 'sarah@madeupcompany.com' , name : 'Sarah Smith' , age : 34 } , ( err ) => {
+            table.put( { email : 'sarah@madeupcompany.com' , name : 'Sarah Smith' , age : 34 } , ( err ) => {
                 table.where( 'name' , 'Sarah Smith' , ( err , data ) => {
                     console.log( data );
                 } );
@@ -44,7 +44,7 @@ Using promises:
 //creates a new database directory called testDB with a primary key of email
 new DB( 'testDB' ).then( db => db.table( 'people' , { id : 'email' }  ) )
 	.then( table => table.createIndex( 'name' ) )
-	.then( table => table.put(  { id : 'sarah@madeupcompany.com' , name : 'Sarah Smith' , age : 34 } ) )
+	.then( table => table.put(  { email : 'sarah@madeupcompany.com' , name : 'Sarah Smith' , age : 34 } ) )
 	.then( table => table.where(  'name' , 'Sarah Smith' ) )
 	.then( results => console.log(  results ) );
 
