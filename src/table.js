@@ -76,10 +76,13 @@ class Table {
             this._put(doc, ( err ) => {
 
                 if ( cb && typeof cb == 'function' ) {
-                    cb( null );
+                    cb( err );
                 } else {
-
-                    resolve( this );
+                    if( !err ) {
+                        resolve(this);
+                    } else {
+                        reject( err );
+                    }
                 }
             });
         } );
@@ -101,14 +104,16 @@ class Table {
 
             let putObject = { offset : e.offset , length : e.length, key : e.object[ this._options.id ] , verb : 'put' }
             this._log.write( JSON.stringify( putObject ) , ( err ) => {
-                
+
                 for( let index in this._indexes ) {
+
                     if (e.object.hasOwnProperty(index)) {
+
                         this._indexes[index].addToMemoryIndex(e.object[index], e.object[this._options.id], e.offset, e.length);
                     }
                 }
 
-                cb();
+                cb( err );
 
             } );
         } ) ;
@@ -120,7 +125,7 @@ class Table {
         let results = [ ];
 
         let promise = new Promise( ( resolve , reject ) => {
-
+          
             if (this._indexes.hasOwnProperty(key_name)) {
                 this._indexes[key_name].seekAll(equals, (err, data) => {
 

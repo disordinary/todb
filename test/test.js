@@ -65,8 +65,11 @@ describe( "Create, populate, and query database using promises" , ( ) => {
 				let promise = new Promise( ( resolve , reject ) => {
 					let populatePromise = [];
 					testData.map(data => populatePromise.push(new Promise((resolve, reject) => {
-						table.put(data);
-						resolve();
+						table.put(data , ( ) => {
+							resolve();
+
+						});
+
 					})));
 
 					return Promise.all(populatePromise).then( _ => resolve( table ) );

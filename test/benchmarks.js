@@ -11,8 +11,8 @@ var inserted = [ ];
 
   //  it( "insertion benchmark" , ( done ) => {
 
-        new DB('__').then(db => db.table('people', {id: 'email'}))
-            .then(table => table.createIndex('age'))
+        new DB('___').then(db => db.table('benchmark', {id: 'num'}))
+            .then(table => table.createIndex('num2'))
             .then(table => {
                 let doInsert = true;
                 let count = 0;
@@ -27,7 +27,7 @@ var inserted = [ ];
                     if( doInsert ) {
                         let key = Math.random();
                         inserted.push( key );
-                        table.put({age: key, name: key} , insert );
+                        table.put({num: key, num2: key} , insert );
 
                     }
                 }
@@ -46,9 +46,10 @@ function benchMarkGet( table ) {
             } , 3000 );
 
             function get( ) {
-                count++;
+
                 if( doGet ) {
-                    table.where("age" , inserted.pop() , ( err , results ) => {
+                    table.where("num" , inserted.pop() , ( err , results ) => {
+                        count++;
                        // console.log( inserted.length );
                         //if( !results[ 0 ].hasOwnProperty( 'age' ) ) {
                          //   console.log( "ERROR" );

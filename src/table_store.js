@@ -101,7 +101,7 @@ class ATable {
 	 */
 	offset( offset , length , cb ) {
 		this._read( offset , length , ( err , _ , data ) => {
-			
+			//console.log( data.slice( max_doc_size - 1  ,-1 ).toString() );
 			cb( err , JSON.parse( data.slice( max_doc_size - 1  ,-1 ) ) );
 		} );
 	}
