@@ -14,6 +14,7 @@ Data is stored in an append only table format. Indexes are stored in index files
 
 ToDB has support for secondary indexes and basic querying on secondary indexes. 
 
+It's node6 only right now. I'll re-add grunt and babel when this latest rebuild is finished, it's just not a priority for me atm.
 
 ## Examples:
 Using callbacks:
