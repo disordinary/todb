@@ -16,6 +16,16 @@ ToDB has support for secondary indexes and basic querying on secondary indexes.
 
 It's node6 only right now. I'll re-add grunt and babel when this latest rebuild is finished, it's just not a priority for me atm.
 
+## Performance:
+The current version has indexes in memory and content on disk so it's quite a bit faster than the final version which will have most indexes on disk (with some in memory):
+
+On a modern SSD I get the following results:
+
+-In 3 seconds it can **write ~37,000 records.**
+-In 3 seconds it can **read ~124,000 records.**
+
+Currently a write operation requires two write operations on disk, and a get requires just one read. When indexes are persisted on disk a get will require two read events, the performance of write and read will therefore be similar.
+
 ## Examples:
 Using callbacks:
 

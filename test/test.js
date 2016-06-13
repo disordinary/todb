@@ -26,7 +26,7 @@ let testData = [
 
 
 
-describe( "Create, populate, and query database using cb's " ,  ( ) => {
+describe( "Create, populate, and query database using callbacks " ,  ( ) => {
 
 	it( "database should create, populate and get query" , ( done ) => {
 			new DB('_', (err, db) => {
