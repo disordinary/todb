@@ -16,7 +16,7 @@ class Table {
 		this._kv = { }; //logs are kept in memory
         this._indexes = { };
 
-        this.createIndex( this._options.id , ( _ ) => { console.log(""); });
+        this.createIndex( this._options.id );
 
 		this._store = new ATable( name + '.at' , ( err , table ) => {
 
@@ -67,11 +67,28 @@ class Table {
 
 	put( doc , cb ) {
 
-		this._put( doc , cb );
+        let promise = new Promise( ( resolve , reject ) => {
+            this._put(doc, ( err ) => {
+
+                if ( cb && typeof cb == 'function' ) {
+                    cb( null );
+                } else {
+
+                    resolve( this );
+                }
+            });
+        } );
+
+        if (!cb || typeof cb != 'function') {
+            return promise;
+        }
+
 	}
 
     _put( doc , cb ) {
+
         this._store.write( doc , ( err , e ) => {
+
             //create an id if it doesn't exist
             if( !e.object.hasOwnProperty(this._options.id)) {
                 e.object[ this._options.id ] = Guid.create().toString();
@@ -86,10 +103,8 @@ class Table {
                     }
                 }
 
+                cb();
 
-                if(cb && typeof cb == "function") {
-                    cb();
-                }
             } );
         } ) ;
     }
@@ -99,29 +114,52 @@ class Table {
 	where( key_name , equals , cb ) {
         let results = [ ];
 
+        let promise = new Promise( ( resolve , reject ) => {
 
-		if( this._indexes.hasOwnProperty( key_name ) ) {
-			this._indexes[ key_name ].seekAll(  equals , ( err , data ) => {
+            if (this._indexes.hasOwnProperty(key_name)) {
+                this._indexes[key_name].seekAll(equals, (err, data) => {
+                    
+                    async.eachSeries(data, (item, next) => {
 
-                async.eachSeries( data , ( item , cb ) => {
+                        this._store.offset(item.offset, item.length, (err, value) => {
+                            results.push(value);
+                            next();
+                        });
+                    }, () => {
 
-                    this._store.offset( item.offset  , item.length , ( err  , value ) => {
+                        if ( cb && typeof cb == 'function' ) {
+                            cb( null , results );
+                        } else {
 
-                        results.push( value );
-                        cb();
-                    } );
-                } , ( ) => {
-                    cb( null , results);
+                            resolve( results );
+                        }
+                    });
+
                 });
+            } else {
+                //do a scan
+            }
+        } );
+        if (!cb || typeof cb != 'function') {
 
-            } );
-		} else {
-            //do a scan
+            return promise;
         }
 	}
 
 	createIndex( name , cb ) {
-		this._indexes[ name ] = new FastIndex( this.name + '.' + name + '.index' , this._options.id , cb );
+        let promise = new Promise( ( resolve , reject ) => {
+            this._indexes[name] = new FastIndex(this.name + '.' + name + '.index', this._options.id, ( err ) => {
+                if ( cb && typeof cb == 'function' ) {
+                    cb( null );
+                } else {
+                    resolve( this );
+                }
+            });
+        } );
+
+        if (!cb || typeof cb != 'function') {
+            return promise;
+        }
 	}
 
     saveIndexes( cb ) {

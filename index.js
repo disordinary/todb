@@ -24,18 +24,21 @@ class Todb {
 
 	//creates or returns a table
 	table( tableName , options , cb ) {
-	
-		let table = new Table( this.path + "/" + tableName , options , ( err , table ) => {
-			this.tables[ tableName ] = table;
+		let promise = new Promise( ( resolve , reject ) => {
+			let table = new Table(this.path + "/" + tableName, options, (err, table) => {
+				this.tables[ tableName ] = table;
 
-			if( cb && typeof cb == 'function' ) {
-				cb(null, table);
-			} else {
-				return new Promise( ( resolve , reject ) => {
+				if ( cb && typeof cb == 'function' ) {
+					cb( null, table );
+				} else {
 					resolve( table );
-				} );
-			}
+				}
+			});
 		} );
+		if (!cb || typeof cb != 'function') {
+			return promise;
+		}
+
 	}
 	
 
