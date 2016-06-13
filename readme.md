@@ -2,6 +2,8 @@
 
 An in process node.js document store. This is a work in progress.
 
+>Warning, For now this is Node 6 only, I've removed the grunt and babelification for now as I have no use for it. I'll re-add in the future.
+
 This project originally started as an experiment to create a binary dependency free index for the search-index search engine and kind of grew, there are other databases out there written in node but they either have binary dependencies, require the keys to be in memory or the entire database. The goal of todb is to have a reasonably performant database and storage engine written in pure javascript and stores indexes on disk.
 
 Why todb? Well if you squint just right, and have had a few drinks, then it kind of looks like todo - as in I'm doing this whenever the mood strikes me and it's likely always going to have things todo. Not to be confused with toodb which is a similar database that I'm writing in rust.
@@ -13,8 +15,6 @@ Writes are guaranteed so in that way it's kind of ACID compliant.
 Data is stored in an append only table format. Indexes are stored in index files as inverted indexes, these are SSTables. 
 
 ToDB has support for secondary indexes and basic querying on secondary indexes. 
-
-It's node6 only right now. I'll re-add grunt and babel when this latest rebuild is finished, it's just not a priority for me atm.
 
 ## Performance:
 The current version has indexes in memory and content on disk so it's quite a bit faster than the final version which will have most indexes on disk (with some in memory):
