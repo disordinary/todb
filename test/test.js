@@ -1,5 +1,5 @@
 var assert = require("assert");
-var DB = require('../index.src.js');
+var DB = require('../index.js');
 var async = require('async');
 
 
