@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="76ec8839-345c-43eb-8a5f-fd511c2aa1e9" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/fast_index.js" afterPath="$PROJECT_DIR$/src/fast_index.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/table.js" afterPath="$PROJECT_DIR$/src/table.js" />
     </list>
     <ignored path="todb.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -77,7 +75,9 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="450">
               <caret line="30" column="0" selection-start-line="30" selection-start-column="0" selection-end-line="30" selection-end-column="0" />
-              <folding />
+              <folding>
+                <marker date="1465803703000" expanded="true" signature="0:713" ph="{&quot;name&quot;: &quot;todb&quot;...}" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -95,8 +95,8 @@
       <file leaf-file-name="fast_index.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/fast_index.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="417">
-              <caret line="232" column="57" selection-start-line="232" selection-start-column="57" selection-end-line="232" selection-end-column="57" />
+            <state relative-caret-position="402">
+              <caret line="231" column="20" selection-start-line="231" selection-start-column="20" selection-end-line="231" selection-end-column="20" />
               <folding />
             </state>
           </provider>
@@ -384,12 +384,12 @@
       <workItem from="1465083520048" duration="202000" />
       <workItem from="1465448388088" duration="3574000" />
       <workItem from="1465725454941" duration="13196000" />
-      <workItem from="1465802109385" duration="3494000" />
+      <workItem from="1465802109385" duration="4100000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="76560000" />
+    <option name="totallyTimeSpent" value="77166000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1280" y="-280" width="1920" height="1080" extended-state="0" />
@@ -555,7 +555,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1465803703000" expanded="true" signature="0:713" ph="{&quot;name&quot;: &quot;todb&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -618,7 +620,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1465803703000" expanded="true" signature="0:713" ph="{&quot;name&quot;: &quot;todb&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -811,7 +815,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="450">
           <caret line="30" column="0" selection-start-line="30" selection-start-column="0" selection-end-line="30" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1465803703000" expanded="true" signature="0:713" ph="{&quot;name&quot;: &quot;todb&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -835,8 +841,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/fast_index.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="417">
-          <caret line="232" column="57" selection-start-line="232" selection-start-column="57" selection-end-line="232" selection-end-column="57" />
+        <state relative-caret-position="402">
+          <caret line="231" column="20" selection-start-line="231" selection-start-column="20" selection-end-line="231" selection-end-column="20" />
           <folding />
         </state>
       </provider>

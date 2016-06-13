@@ -229,7 +229,7 @@ class FastIndex {
 	seekAll(  key , cb ) {
         var results = [ ];
 
-        //..load from disk first..\\
+        			//..load from disk first..\\
 		//..then load from temp memindex if it exists..\\
         if( this._memoryIndex.hasOwnProperty( key ) ) {
 
