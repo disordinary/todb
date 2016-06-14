@@ -21,10 +21,21 @@ The current version has indexes in memory and content on disk so it's quite a bi
 
 On a modern SSD I get the following results:
 
-* In 3 seconds it can **write ~37,000 records.**
-* In 3 seconds it can **read ~124,000 records.**
+* In 3 seconds ToDB can **write ~37,000 records.**
+* In 3 seconds ToDB can **read ~124,000 records.**
 
 Currently a write operation requires two write operations on disk, and a get requires just one read. When indexes are persisted on disk a get will require two read events, the performance of write and read will therefore be similar.
+
+This compares to LevelDB:
+
+* In 3 seconds LevelDB can **write ~85,000 records.**
+* In 3 seconds LevelDB can **read ~99,000 records.**
+
+Although LevelDB isn't really a 1 to 1 comparison to ToDB as ToDB has the overhead of indexing rather than just being a KV store.
+
+And SQlite3:
+* In 3 seconds SQLite3 can **write ~3,900 records.**
+* In 3 seconds SQLite3 can **read ~29,460 records.**
 
 ## Examples:
 Using callbacks:
