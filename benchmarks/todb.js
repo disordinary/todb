@@ -12,7 +12,7 @@ var inserted = [ ];
   //  it( "insertion benchmark" , ( done ) => {
 
         new DB('___').then(db => db.table('benchmark', {id: 'num'}))
-            .then(table => table.createIndex('num2'))
+           // .then(table => table.createIndex('num2'))
             .then(table => {
                 let doInsert = true;
                 let count = 0;
