@@ -4,25 +4,41 @@
 //Some queries can be streamed from disk, but things that require things like sorting (other than by PK descending) require the query to be loaded into memory
 
 class Query {
-    constructor( ) {
-        this.table;
-        this.indexes = [ ]; //destructure the query by index
+    constructor( db ) {
+        this._db = db;
+        this._table;
+        this._indexes = { }; //destructure the query by index
+        this._filters = [ ];
     }
 
     table( tableName ) {
-        this.table = tableName;
+        this._table = tableName;
         return this;
     }
 
     get( index , value ) {
+        if( !this._indexes.hasOwnProperty(index) ) {
+            this._indexes[ index ] = [ ];
+        }
+        this._indexes[ index ].push( { type : "get" , index , value } );
         return this;
     }
 
     between( index , lowerKey , upperKey ) {
+        if( !this._indexes.hasOwnProperty(index) ) {
+            this._indexes[ index ] = [ ];
+        }
+        this._indexes[ index ].push( { type : "between" , index , lowerKey , upperKey } );
         return this;
     }
 
     filter( fn ) {
+        this._filters.push( fn );
+        return this;
+    }
+
+    filterIndex( index , fn ) {
+        this._indexes[ index ].push( { type : "filter" , fn } );
         return this;
     }
 
@@ -37,19 +53,11 @@ class Query {
     on( left , right ) {
         return this;
     }
-
-
-    map( fn ) {
-        return this;
-    }
-
-    reduce( fn ) {
-        return this;
-    }
     group( fn ) {
         return this;
     }
-    fold( fn ) {
+
+    reverse( ) {
         return this;
     }
 
@@ -57,9 +65,7 @@ class Query {
         return this;
     }
 
-    reverse( ) {
-        return this;
-    }
+
     skip( num ) {
         return this;
     }
@@ -67,19 +73,34 @@ class Query {
     limit( num ) {
         return this;
     }
-    count() {
-        return this;
+
+    map( fn ) {
+
+    }
+
+    reduce( fn ) {
+
+    }
+
+    count( cb ) {
+       //return a promise if no cb defined
     }
     all( cb ) {
-
+        console.log(
+        this._table,
+        this._indexes , //destructure the query by index
+        this._filters )
+        //return a promise if no cb defined
     }
     forEach( cb ) {
 
     }
-    toStream( cb ) {
+    toStream( ) {
 
     }
-    toGenerator( cb ) {
+    toGenerator( ) {
 
     }
 }
+
+module.exports = Query;

@@ -2,11 +2,14 @@
 var fs = require( 'fs' );
 var Table = require('./src/table.js');
 var config = require('./src/config.js');
+var Query = require('./src/query.js');
 class Todb {
 	constructor( path_to_db , cb ) {
 
 		this.path = path_to_db;
 		this.config = config( path_to_db );
+
+		this.query = new Query( this );
 		if (!fs.existsSync(this.path)){
 		    fs.mkdirSync(this.path);
 		}
