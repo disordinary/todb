@@ -71,30 +71,3 @@ new DB( 'testDB' ).then( db => db.table( 'people' , { id : 'email' }  ) )
 
 
 ```
-Using the Query interface (coming at some point)
-```javascript
-
-```
-
-Future options:
-
-```javascript
-//I'd like to use features like proxies and decorators so you could have something like:
-@persistent
-class Person {
-    constructor( email , name , age ) {
-        @primaryKey
-        this.email = email;
-
-        @indexed
-        this.name = name;
-
-        this.age = age;
-
-        @foreignRelationship(Person)
-        this.friends = [ ];
-    }
-}
-//And treat the object like you would any other in JS, the proxy would mean that the underlying dataset would update with every change.
-```
-
