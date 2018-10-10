@@ -1,0 +1,17 @@
+{
+  "tables": [
+    {
+      "one": {
+          "key_length": 8, //could be 8, 16, 32, 64
+          "indexes": [
+            {"age": {"type": "u8"}},
+            {"name": {"type": "str", "length": 16}} // in the future do constraints, etc?
+          ]
+      }
+    }
+  ],
+  "views": [
+    // Couch style views
+  ]
+
+}
